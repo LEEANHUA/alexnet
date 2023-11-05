@@ -12,6 +12,8 @@ import torch.nn.functional as F
 from torch import optim
 import matplotlib.pyplot as plt
 from torchinfo import summary
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
 
 # データセットの読み込み
@@ -117,9 +119,11 @@ train_loss_list = []
 train_accuracy_list = []
 test_loss_list = []
 test_accuracy_list = []
+pred_list = []
+true_list = []
 
 #学習の実行
-epoch = 100
+epoch = 50
 for i in range(epoch):
     print('--------------------------------------------')
     print("Epoch: {}/{}".format(i+1, epoch))
@@ -163,6 +167,9 @@ for i in range(epoch):
             
             y_pred_labels = torch.max(y_pred_prob, 1)[1]
             test_accuracy += torch.sum(y_pred_labels == labels).item() / len(labels)
+            
+            pred_list += y_pred_labels.detach().cpu().numpy().tolist()
+            true_list += labels.detach().cpu().numpy().tolist()
     
     epoch_test_loss = test_loss / len(test_batch)
     epoch_test_accuracy = test_accuracy / len(test_batch)
@@ -176,6 +183,18 @@ for i in range(epoch):
     train_accuracy_list.append(epoch_train_accuracy)
     test_loss_list.append(epoch_test_loss)
     test_accuracy_list.append(epoch_test_accuracy)
+    
+# 混同行列
+cm = confusion_matrix(true_list, pred_list)
+cm_float = cm.astype(np.float64)
+for i in range(5):
+    sum = np.sum(cm_float[i])
+    cm_float[i] /= sum
+plt.figure()
+sns.heatmap(cm_float, annot=True, cmap='Blues')
+plt.xlabel('Predicted label')
+plt.ylabel('True label')
+plt.savefig('./figure/AlexNet_confusionmatrix.png')
     
 plt.figure()
 plt.title('Train and Test Loas')
