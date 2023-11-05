@@ -41,7 +41,6 @@ train_data, test_data, train_label, test_label = train_test_split(data, label, t
 # train_data配列に[3, 縦, 横]のTensorが1600個入っているので、これを[1600, 3, 縦, 横]のTensorに変換
 train_data = torch.stack(train_data, dim=0)
 test_data = torch.stack(test_data, dim=0) # test_dataも同様
-print("Train Data: {}, Test Data: {}".format(train_data.size(), test_data.size()))
 
 # 回帰の場合はlabelもtorch.float32のデータ型に変換 
 train_label = torch.Tensor(train_label)
@@ -49,7 +48,6 @@ train_label = torch.Tensor(train_label)
 train_label = torch.reshape(train_label, (-1, 1)) # 引数に-1を入れると、それ以外の引数から自動的に出力配列の値を決める
 test_label = torch.Tensor(test_label)
 test_label = torch.reshape(test_label, (-1, 1))
-print("Train Label: {}, Test Label: {}".format(train_label.size(), test_label.size()))
 
 # 画像データとラベルを結合したデータセットを作成
 train_dataset = TensorDataset(train_data, train_label)
@@ -180,9 +178,10 @@ for i in range(epoch):
     train_mae_list.append(epoch_train_mae)
     test_loss_list.append(epoch_test_loss)
     test_mae_list.append(epoch_test_mae)
-    
+   
+# 損失(MSE)
 plt.figure()
-plt.title('Train and Test Loas')
+plt.title('Train and Test Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.plot(range(1, epoch+1), train_loss_list, color='blue',
@@ -192,6 +191,7 @@ plt.plot(range(1, epoch+1), test_loss_list, color='red',
 plt.legend()
 plt.savefig('./figure/AlexNet_recursion_loss.png')
 
+# MAE
 plt.figure()
 plt.title('Train and Test MAE')
 plt.xlabel('Epoch')

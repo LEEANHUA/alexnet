@@ -43,7 +43,6 @@ train_data, test_data, train_label, test_label = train_test_split(data, label, t
 # train_data配列に[3, 縦, 横]のTensorが1600個入っているので、これを[1600, 3, 縦, 横]のTensorに変換
 train_data = torch.stack(train_data, dim=0)
 test_data = torch.stack(test_data, dim=0) # test_dataも同様
-print("Train Data: {}, Test Data: {}".format(train_data.size(), test_data.size()))
 
 # labelはtorch.int64のデータ型に変換 
 train_label = torch.LongTensor(train_label)
@@ -97,7 +96,7 @@ class AlexNet(nn.Module):
     
     def forward(self, x):
         x = self.features(x)
-        x = x.view(x.size(0), 256 * 6 * 6) # 引数に-1を入れると、それ以外の引数から自動的に出力配列の値を決める
+        x = x.view(x.size(0), 256 * 6 * 6)
         x = self.classifier(x)
         return x
 
@@ -195,9 +194,10 @@ sns.heatmap(cm_float, annot=True, cmap='Blues')
 plt.xlabel('Predicted label')
 plt.ylabel('True label')
 plt.savefig('./figure/AlexNet_confusionmatrix.png')
-    
+
+# 損失  
 plt.figure()
-plt.title('Train and Test Loas')
+plt.title('Train and Test Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.plot(range(1, epoch+1), train_loss_list, color='blue',
@@ -207,6 +207,7 @@ plt.plot(range(1, epoch+1), test_loss_list, color='red',
 plt.legend()
 plt.savefig('./figure/AlexNet_loss.png')
 
+# 正解率
 plt.figure()
 plt.title('Train and Test Accuracy')
 plt.xlabel('Epoch')
