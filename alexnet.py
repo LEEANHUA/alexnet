@@ -20,6 +20,15 @@ import seaborn as sns
 data = []
 label = []
 
+# データの前処理を行うtransformを作成
+transform = transforms.Compose([
+    transforms.Resize(256), # (256, 256)にリサイズ
+    transforms.CenterCrop(224), # 画像の中心に合わせて(224, 224)で切り抜く
+    transforms.PILToTensor(), # 0-255のテンソルに変換
+    transforms.ConvertImageDtype(dtype=torch.float32), # 0-1のテンソルに変換
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), # 標準化
+])
+
 # jsonファイルから主観評価実験の結果を読み込む
 directory = '/home/miyamoto/public_html/exp202309/parameter_robopitch2/exp-data/logql/'
 file_list = os.listdir(directory)
@@ -31,8 +40,7 @@ for j in range(len(file_list)):
     for i in range(40):
         robot = qlist[i]['robot']
         image = Image.open('./robot_image/' + robot)
-        image = image.resize((224, 224)) # 1024*1024から圧縮
-        image = torchvision.transforms.functional.to_tensor(image) # PILからTensor[3, 縦, 横]に変換
+        image = transform(image)
         data.append(image)
         ans = alist[i]
         label.append(ans)
