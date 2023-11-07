@@ -21,13 +21,20 @@ data = []
 label = []
 
 # データの前処理を行うtransformを作成
-transform = transforms.Compose([
-    transforms.Resize(256), # (256, 256)にリサイズ
-    transforms.CenterCrop(224), # 画像の中心に合わせて(224, 224)で切り抜く
-    transforms.PILToTensor(), # 0-255のテンソルに変換
-    transforms.ConvertImageDtype(dtype=torch.float32), # 0-1のテンソルに変換
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), # 標準化
-])
+transform = {
+    'train': transforms.Compose([
+        transforms.RandomResizedCrop(224), # 画像のランダムな場所を切り抜き、(224, 224)にリサイズ
+        transforms.RandomHorizontalFlip(), # 1/2で左右反転
+        transforms.ToTensor(), # PILImageを0-1のテンソルに変換
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), # 標準化
+    ]),
+    'test': transforms.Compose([
+        transforms.Resize(256), # (256, 256)にリサイズ
+        transforms.CenterCrop(224), # 画像の中心に合わせて(224, 224)で切り抜く
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+}
 
 # jsonファイルから主観評価実験の結果を読み込む
 directory = '/home/miyamoto/public_html/exp202309/parameter_robopitch2/exp-data/logql/'
@@ -40,13 +47,15 @@ for j in range(len(file_list)):
     for i in range(40):
         robot = qlist[i]['robot']
         image = Image.open('./robot_image/' + robot)
-        image = transform(image)
+        # image = transform(image)
         data.append(image)
         ans = alist[i]
         label.append(ans)
         
 # 学習データとテストデータを分割
 train_data, test_data, train_label, test_label = train_test_split(data, label, test_size=0.2)
+train_data = list(map(transform['train'], train_data))
+test_data = list(map(transform['test'], test_data))
         
 # train_data配列に[3, 縦, 横]のTensorが1600個入っているので、これを[1600, 3, 縦, 横]のTensorに変換
 train_data = torch.stack(train_data, dim=0)
