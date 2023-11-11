@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from torchinfo import summary
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
+from torchvision import models
 
 
 # データセットの読み込み
@@ -142,7 +143,19 @@ class AlexNet(nn.Module):
 # ネットワークのロード
 # CPUとGPUのどちらを使うかを指定
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-net = AlexNet().to(device)
+# net = AlexNet().to(device)
+net = models.alexnet(weights=models.AlexNet_Weights.DEFAULT)
+for param in net.parameters():
+    param.requires_grad = False
+net.classifier = nn.Sequential(
+    nn.Dropout(p=0.5),
+    nn.Linear(256 * 6 * 6, 4096),
+    nn.ReLU(inplace=True),
+    nn.Dropout(p=0.5),
+    nn.Linear(4096, 4096),
+    nn.ReLU(inplace=True),
+    nn.Linear(4096, num_classes),
+)
 
 summary(model=net, input_size=(batch_size, 3, 224, 224))
 
