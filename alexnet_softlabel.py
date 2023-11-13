@@ -272,3 +272,22 @@ plt.plot(range(1, epoch+1), test_accuracy_list, color='red',
          linestyle='--', label='Test_Accuracy')
 plt.legend()
 plt.savefig('./figure/AlexNet_accuracy.png')
+
+# 別の画像を使って評価
+test_robot_names = ['man', 'woman', 'cyborg_man', 'cyborg_woman', 'cyborg', 'robot_with_al_1', 'robot_with_al_2', 'robot_without_al_1', 'robot_without_al_2', 'thing']
+# 上のコードではtrain_test_split内でconvert('RGB')が行われていたので、この場合は自分で行う必要がある
+test_image_another = list(map(lambda x: Image.open('./robot_image/old/' + x + '.png').convert('RGB'), test_robot_names))
+test_data_another = list(map(transform['test'], test_image_another))
+test_data_another = torch.stack(test_data_another, dim=0)
+net.eval()
+with torch.no_grad():
+    images = test_data_another.to(device)
+    y_pred_prob = net(images)
+    y_pred_labels = torch.max(y_pred_prob, 1)[1]
+    fig = plt.figure()
+    for i in range(10):
+        ax = fig.add_subplot(2, 5, i+1)
+        ax.axis('off')
+        ax.set_title(y_pred_labels[i].item())
+        ax.imshow(test_image_another[i])
+    plt.savefig('./figure/AlexNet_test.png')
