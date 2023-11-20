@@ -284,7 +284,7 @@ with torch.no_grad():
     images = test_data_another.to(device)
     y_pred_prob = net(images)
     y_pred_prob = y_pred_prob.detach().cpu().numpy().tolist()
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(15, 15))
     for i in range(10):
         ax = fig.add_subplot(5, 4, 2*i+1)
         ax.axis('off')
