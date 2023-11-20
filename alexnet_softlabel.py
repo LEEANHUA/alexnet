@@ -283,11 +283,13 @@ net.eval()
 with torch.no_grad():
     images = test_data_another.to(device)
     y_pred_prob = net(images)
-    y_pred_labels = torch.max(y_pred_prob, 1)[1]
+    y_pred_prob = y_pred_prob.detach().cpu().numpy().tolist()
+    print(y_pred_prob)
     fig = plt.figure()
     for i in range(10):
-        ax = fig.add_subplot(2, 5, i+1)
+        ax = fig.add_subplot(4, 5, 2*i+1)
         ax.axis('off')
-        ax.set_title(y_pred_labels[i].item())
         ax.imshow(test_image_another[i])
+        ax2 = fig.add_subplot(4, 5, 2*i+2)
+        ax2.bar([0, 1, 2, 3, 4], y_pred_prob[i])
     plt.savefig('./figure/AlexNet_test.png')
