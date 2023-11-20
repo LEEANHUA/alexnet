@@ -45,4 +45,4 @@ with torch.no_grad():
         ax.imshow(test_image_another[i])
         ax2 = fig.add_subplot(5, 4, 2*i+2)
         ax2.bar([0, 1, 2, 3, 4], y_pred_prob[i])
-    plt.savefig('./figure/AlexNet_test_2.png')
+    plt.savefig('./figure/AlexNet_test.png')
