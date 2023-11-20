@@ -156,6 +156,7 @@ net.classifier = nn.Sequential(
     nn.ReLU(inplace=True),
     nn.Linear(4096, num_classes),
 )
+net = net.to(device)
 
 summary(model=net, input_size=(batch_size, 3, 224, 224))
 
@@ -273,6 +274,5 @@ plt.plot(range(1, epoch+1), test_accuracy_list, color='red',
 plt.legend()
 plt.savefig('./figure/AlexNet_accuracy.png')
 
-# Torch Script形式で保存
-model_scripted = torch.jit.script(net)
-model_scripted.save('model_scripted.pth')
+# 重みとバイアスのみ保存
+torch.save(net.state_dict(), 'model_weight.pth')

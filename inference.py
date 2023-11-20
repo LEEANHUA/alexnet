@@ -3,13 +3,31 @@ import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
+from torch import nn
 import matplotlib.pyplot as plt
-
-# Torch Script形式で読み込み
-net = torch.jit.load('model_scripted.pth')
+from torchvision import models
 
 # CPUとGPUのどちらを使うかを指定
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# ニューラルネットワークの定義
+num_classes = 5 # 0~4で分類
+net = models.alexnet(weights=models.AlexNet_Weights.DEFAULT)
+for param in net.parameters():
+    param.requires_grad = False
+net.classifier = nn.Sequential(
+    nn.Dropout(p=0.5),
+    nn.Linear(256 * 6 * 6, 4096),
+    nn.ReLU(inplace=True),
+    nn.Dropout(p=0.5),
+    nn.Linear(4096, 4096),
+    nn.ReLU(inplace=True),
+    nn.Linear(4096, num_classes),
+)
+net = net.to(device)
+
+# 重みの読み込み
+net.load_state_dict(torch.load('model_weight.pth'))
 
 # データの前処理を行うtransformを作成
 transform = {
