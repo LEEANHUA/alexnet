@@ -6,6 +6,11 @@ import torchvision.transforms as transforms
 from torch import nn
 import matplotlib.pyplot as plt
 from torchvision import models
+# GradCam
+from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+from pytorch_grad_cam.utils.image import show_cam_on_image
+import random
 
 # CPUとGPUのどちらを使うかを指定
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -42,6 +47,11 @@ transform = {
         transforms.CenterCrop(224), # 画像の中心に合わせて(224, 224)で切り抜く
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]),
+    'display': transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
     ])
 }
 
@@ -64,3 +74,28 @@ with torch.no_grad():
         ax2 = fig.add_subplot(5, 4, 2*i+2)
         ax2.bar([0, 1, 2, 3, 4], y_pred_prob[i])
     plt.savefig('./figure/AlexNet_test.png')
+    
+# GradCam
+# 学習データと同じ画像を用いた画像群から１枚ずつランダムに抜き出して、GradCamを用いて分析
+test_image_another = list(map(lambda x: Image.open('./robot_image/' + x + '/' + x + '_' + str(random.randint(1, 10)) + '.png').convert('RGB'), test_robot_names))
+test_data_another = list(map(transform['test'], test_image_another))
+test_data_another = torch.stack(test_data_another, dim=0)
+# 購買計算によるパラメータの更新をONにしないと動かない
+for param in net.parameters():
+    param.requires_grad = True
+# show_cam_on_imageに[0, 1]で入力する必要があるため、正則化を行わないtransformを追加して使用
+display_data_another = list(map(transform['display'], test_image_another))
+target_layers = [net.features]
+cam = GradCAM(model=net, target_layers=target_layers, use_cuda=torch.cuda.is_available())
+grayscale_cams = cam(input_tensor=test_data_another)
+fig = plt.figure(figsize=(15, 15))
+for i in range(10):
+    ax = fig.add_subplot(5, 4, 2*i+1)
+    ax.axis('off')
+    ax.imshow(test_image_another[i])
+    ax2 = fig.add_subplot(5, 4, 2*i+2)
+    ax2.axis('off')
+    grayscale_cam = grayscale_cams[i]
+    visualization = show_cam_on_image(display_data_another[i].permute(1, 2, 0).numpy(), grayscale_cam, use_rgb=True)
+    ax2.imshow(visualization)
+plt.savefig('./figure/GradCam_sample.png')
