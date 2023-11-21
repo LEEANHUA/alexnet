@@ -56,46 +56,46 @@ transform = {
 }
 
 # 別の画像を使って評価
-test_robot_names = ['man', 'woman', 'cyborg_man', 'cyborg_woman', 'cyborg', 'robot_with_al_1', 'robot_with_al_2', 'robot_without_al_1', 'robot_without_al_2', 'thing']
+robot_names = ['man', 'woman', 'cyborg_man', 'cyborg_woman', 'cyborg', 'robot_with_al_1', 'robot_with_al_2', 'robot_without_al_1', 'robot_without_al_2', 'thing']
 # 上のコードではtrain_test_split内でconvert('RGB')が行われていたので、この場合は自分で行う必要がある
-test_image_another = list(map(lambda x: Image.open('./robot_image/old/' + x + '.png').convert('RGB'), test_robot_names))
-test_data_another = list(map(transform['test'], test_image_another))
-test_data_another = torch.stack(test_data_another, dim=0)
+test_image = list(map(lambda x: Image.open('./robot_image/old/' + x + '.png').convert('RGB'), robot_names))
+test_data = list(map(transform['test'], test_image))
+test_data = torch.stack(test_data, dim=0)
 net.eval()
 with torch.no_grad():
-    images = test_data_another.to(device)
+    images = test_data.to(device)
     y_pred_prob = net(images)
     y_pred_prob = y_pred_prob.detach().cpu().numpy().tolist()
     fig = plt.figure(figsize=(15, 15))
     for i in range(10):
         ax = fig.add_subplot(5, 4, 2*i+1)
         ax.axis('off')
-        ax.imshow(test_image_another[i])
+        ax.imshow(test_image[i])
         ax2 = fig.add_subplot(5, 4, 2*i+2)
         ax2.bar([0, 1, 2, 3, 4], y_pred_prob[i])
     plt.savefig('./figure/AlexNet_test.png')
     
 # GradCam
 # 学習データと同じ画像を用いた画像群から１枚ずつランダムに抜き出して、GradCamを用いて分析
-test_image_another = list(map(lambda x: Image.open('./robot_image/' + x + '/' + x + '_' + str(random.randint(1, 10)) + '.png').convert('RGB'), test_robot_names))
-test_data_another = list(map(transform['test'], test_image_another))
-test_data_another = torch.stack(test_data_another, dim=0)
+test_image = list(map(lambda x: Image.open('./robot_image/' + x + '/' + x + '_' + str(random.randint(1, 10)) + '.png').convert('RGB'), robot_names))
+test_data = list(map(transform['test'], test_image))
+test_data = torch.stack(test_data, dim=0)
 # 購買計算によるパラメータの更新をONにしないと動かない
 for param in net.parameters():
     param.requires_grad = True
 # show_cam_on_imageに[0, 1]で入力する必要があるため、正則化を行わないtransformを追加して使用
-display_data_another = list(map(transform['display'], test_image_another))
+display_data = list(map(transform['display'], test_image))
 target_layers = [net.features]
 cam = GradCAM(model=net, target_layers=target_layers, use_cuda=torch.cuda.is_available())
-grayscale_cams = cam(input_tensor=test_data_another)
+grayscale_cams = cam(input_tensor=test_data)
 fig = plt.figure(figsize=(15, 15))
 for i in range(10):
     ax = fig.add_subplot(5, 4, 2*i+1)
     ax.axis('off')
-    ax.imshow(test_image_another[i])
+    ax.imshow(test_image[i])
     ax2 = fig.add_subplot(5, 4, 2*i+2)
     ax2.axis('off')
     grayscale_cam = grayscale_cams[i]
-    visualization = show_cam_on_image(display_data_another[i].permute(1, 2, 0).numpy(), grayscale_cam, use_rgb=True)
+    visualization = show_cam_on_image(display_data[i].permute(1, 2, 0).numpy(), grayscale_cam, use_rgb=True)
     ax2.imshow(visualization)
 plt.savefig('./figure/GradCam_sample.png')
