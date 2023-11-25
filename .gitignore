@@ -1,3 +1,5 @@
 figure/
 robot_image/
 venv/
+webapp/static/
+model_weight.pth
