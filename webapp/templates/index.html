@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        {% if result != None %}
+        <img src="{{filepath}}" alt="認識に用いた画像" border="1" width="150">  認識結果は {{result}} です<br>
+        <hr>
+        {% endif %}
+        ファイルを選択して送信してください<br>
+        <form action="" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <input type="submit">
+        </form>
+    </body>
+</html>
