@@ -65,8 +65,9 @@ net.eval()
 fig = plt.figure(figsize=(20, 15))
 with torch.no_grad():
     images = test_data.to(device)
-    y_pred_prob = net(images)
-    y_pred_prob = y_pred_prob.detach().cpu().numpy().tolist()
+    y_pred_prob = net(images).detach()
+    softmax = nn.Softmax(dim=1)
+    y_pred_prob = softmax(y_pred_prob).tolist()
     for i in range(10):
         ax = fig.add_subplot(5, 6, 3*i+1)
         ax.axis('off')
@@ -98,8 +99,9 @@ net.eval()
 fig = plt.figure(figsize=(20, 15))
 with torch.no_grad():
     images = test_data.to(device)
-    y_pred_prob = net(images)
-    y_pred_prob = y_pred_prob.detach().cpu().numpy().tolist()
+    y_pred_prob = net(images).detach()
+    softmax = nn.Softmax(dim=1)
+    y_pred_prob = softmax(y_pred_prob).tolist()
     for i in range(10):
         ax = fig.add_subplot(5, 6, 3*i+1)
         ax.axis('off')
