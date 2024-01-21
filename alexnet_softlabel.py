@@ -69,12 +69,14 @@ for i in range(len(image_names)):
     soft_label[image_name] = label_count
 
 # 0-4のハードなラベルをソフトラベルに置き換える
-for i in range(len(data)):
-    label[i] = soft_label[data[i]]
-    data[i] = Image.open('./robot_image/' + data[i])
+new_data = []
+new_label = []
+for i in range(len(image_names)):
+    new_label.append(soft_label[data[i]])
+    new_data.append(Image.open('./robot_image/' + data[i]))
         
 # 学習データとテストデータを分割
-train_data, test_data, train_label, test_label = train_test_split(data, label, test_size=0.2)
+train_data, test_data, train_label, test_label = train_test_split(new_data, new_label, test_size=0.2)
 train_data = list(map(transform['train'], train_data))
 test_data = list(map(transform['test'], test_data))
         
@@ -175,7 +177,7 @@ pred_list = []
 true_list = []
 
 #学習の実行
-epoch = 50
+epoch = 30
 for i in range(epoch):
     print('--------------------------------------------')
     print("Epoch: {}/{}".format(i+1, epoch))
