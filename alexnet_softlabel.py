@@ -15,6 +15,7 @@ from torchinfo import summary
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from torchvision import models
+import random
 
 
 # データセットの読み込み
@@ -51,8 +52,8 @@ for j in range(len(file_list)):
         ans = alist[i]
         label.append(ans)
 
-# dataの重複をなくし、画像の名前のリストを生成
-image_names = list(set(data))
+# dataの重複をなくし辞書順に並べることで、画像の名前のリストを生成
+image_names = sorted(list(set(data)), key=str.lower)
 
 # 画像の名前に対して、ラベルの個数をカウントし、総数で割る
 def create_standard_softlabel(image_names, data):
@@ -90,15 +91,29 @@ def create_softmax_softlabel(image_names, data):
 
 soft_label = create_softmax_softlabel(image_names, data)
 
-# 0-4のハードなラベルをソフトラベルに置き換える
-new_data = []
-new_label = []
-for i in range(len(image_names)):
-    new_label.append(soft_label[data[i]])
-    new_data.append(Image.open('./robot_image/' + data[i]))
-        
-# 学習データとテストデータを分割
-train_data, test_data, train_label, test_label = train_test_split(new_data, new_label, test_size=0.2)
+def randint_2(a, b):
+    n = random.randint(a, b)
+    m = random.randint(a, b)
+    while n == m:
+        m = random.randint(a, b)
+    return n, m
+
+# 学習データセットとテストデータセットを作成
+# 10個の画像群それぞれに対し10枚の画像がある。そのうちのランダムな2枚をテストデータとする
+train_data = []
+test_data = []
+train_label = []
+test_label = []
+for i in range(len(image_names) // 10):
+    a, b = randint_2(0, 9)
+    for j in range(10):
+        if j == a or j == b:
+            test_data.append(Image.open('./robot_image/' + image_names[i*10+j]))
+            test_label.append(soft_label[image_names[i*10+j]])
+        else:
+            train_data.append(Image.open('./robot_image/' + image_names[i*10+j]))
+            train_label.append(soft_label[image_names[i*10+j]])
+
 train_data = list(map(transform['train'], train_data))
 test_data = list(map(transform['test'], test_data))
         
