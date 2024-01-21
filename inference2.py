@@ -92,8 +92,6 @@ for i in range(len(image_names)):
     for k in range(len(label_count)):
         label_count[k] /= count_sum
     soft_label[image_name] = label_count
-
-print(soft_label)
     
 # GradCam
 robot_names = ['man', 'woman', 'cyborg_man', 'cyborg_woman', 'cyborg', 'robot_with_al_1', 'robot_with_al_2', 'robot_without_al_1', 'robot_without_al_2', 'thing']
@@ -114,6 +112,8 @@ with torch.no_grad():
         ax.imshow(test_image[i])
         ax2 = fig.add_subplot(5, 6, 3*i+2)
         ax2.bar([0, 1, 2, 3, 4], y_pred_prob[i])
+        ax2.set_ylim(0, 1)
         ax3 = fig.add_subplot(5, 6, 3*i+3)
         ax3.bar([0, 1, 2, 3, 4], soft_label[robot_names[i] + '.png'])
+        ax3.set_ylim(0, 1)
 plt.savefig('./figure/inference3.png')
