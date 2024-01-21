@@ -20,7 +20,6 @@ from torchvision import models
 # データセットの読み込み
 data = []
 label = []
-soft_label = {}
 
 # データの前処理を行うtransformを作成
 transform = {
@@ -55,18 +54,41 @@ for j in range(len(file_list)):
 # dataの重複をなくし、画像の名前のリストを生成
 image_names = list(set(data))
 
-# 画像の名前に対して、ラベルの個数をカウントし、ソフトラベルを作成
-for i in range(len(image_names)):
-    image_name = image_names[i]
-    label_count = [0 for _ in range(5)]
-    for j in range(len(label)):
-        if data[j] == image_name:
-            label_count[label[j]] += 1
-    
-    count_sum = sum(label_count)
-    for k in range(len(label_count)):
-        label_count[k] /= count_sum
-    soft_label[image_name] = label_count
+# 画像の名前に対して、ラベルの個数をカウントし、総数で割る
+def create_standard_softlabel(image_names, data):
+    soft_label = {}
+    for i in range(len(image_names)):
+        image_name = image_names[i]
+        label_count = [0 for _ in range(5)]
+        for j in range(len(label)):
+            if data[j] == image_name:
+                label_count[label[j]] += 1
+        
+        count_sum = sum(label_count)
+        for k in range(len(label_count)):
+            label_count[k] /= count_sum
+        soft_label[image_name] = label_count
+    return soft_label
+
+# 総数で割らず、softmax関数に入力する
+def create_softmax_softlabel(image_names, data):
+    soft_label = {}
+    count = []
+    for i in range(len(image_names)):
+        image_name = image_names[i]
+        label_count = [0 for _ in range(5)]
+        for j in range(len(label)):
+            if data[j] == image_name:
+                label_count[label[j]] += 1
+        count.append(label_count)
+
+    softmax = nn.Softmax(dim=1)
+    softmax_count = softmax(torch.tensor(count, dtype=torch.float32)).tolist()
+    for i in range(len(image_names)):
+        soft_label[image_names[i]] = softmax_count[i]
+    return soft_label
+
+soft_label = create_softmax_softlabel(image_names, data)
 
 # 0-4のハードなラベルをソフトラベルに置き換える
 new_data = []
