@@ -35,7 +35,7 @@ net.classifier = nn.Sequential(
 net = net.to(device)
 
 # 重みの読み込み
-net.load_state_dict(torch.load('model_weight.pth'))
+net.load_state_dict(torch.load('model_SP.pth'))
 
 # データの前処理を行うtransformを作成
 transform = {
@@ -80,18 +80,41 @@ for j in range(len(file_list)):
 # dataの重複をなくし、画像の名前のリストを生成
 image_names = list(set(data))
 
-# 画像の名前に対して、ラベルの個数をカウントし、ソフトラベルを作成
-for i in range(len(image_names)):
-    image_name = image_names[i]
-    label_count = [0 for _ in range(5)]
-    for j in range(len(label)):
-        if data[j] == image_name:
-            label_count[label[j]] += 1
-    
-    count_sum = sum(label_count)
-    for k in range(len(label_count)):
-        label_count[k] /= count_sum
-    soft_label[image_name] = label_count
+# 画像の名前に対して、ラベルの個数をカウントし、総数で割る
+def create_standard_softlabel(image_names, data):
+    soft_label = {}
+    for i in range(len(image_names)):
+        image_name = image_names[i]
+        label_count = [0 for _ in range(5)]
+        for j in range(len(label)):
+            if data[j] == image_name:
+                label_count[label[j]] += 1
+        
+        count_sum = sum(label_count)
+        for k in range(len(label_count)):
+            label_count[k] /= count_sum
+        soft_label[image_name] = label_count
+    return soft_label
+
+# 総数で割らず、softmax関数に入力する
+def create_softmax_softlabel(image_names, data):
+    soft_label = {}
+    count = []
+    for i in range(len(image_names)):
+        image_name = image_names[i]
+        label_count = [0 for _ in range(5)]
+        for j in range(len(label)):
+            if data[j] == image_name:
+                label_count[label[j]] += 1
+        count.append(label_count)
+
+    softmax = nn.Softmax(dim=1)
+    softmax_count = softmax(torch.tensor(count, dtype=torch.float32)).tolist()
+    for i in range(len(image_names)):
+        soft_label[image_names[i]] = softmax_count[i]
+    return soft_label
+
+soft_label = create_softmax_softlabel(image_names, data)
     
 # GradCam
 robot_names = ['man', 'woman', 'cyborg_man', 'cyborg_woman', 'cyborg', 'robot_with_al_1', 'robot_with_al_2', 'robot_without_al_1', 'robot_without_al_2', 'thing']
@@ -116,4 +139,8 @@ with torch.no_grad():
         ax3 = fig.add_subplot(5, 6, 3*i+3)
         ax3.bar([0, 1, 2, 3, 4], soft_label[robot_names[i] + '.png'])
         ax3.set_ylim(0, 1)
-plt.savefig('./figure/inference3.png')
+        if i == 0 or i == 1:
+            ax.set_title("Image", fontsize=18)
+            ax2.set_title("Model output", fontsize=18)
+            ax3.set_title("Target label", fontsize=18)
+plt.savefig('./figure/SP_inference.png')
