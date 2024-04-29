@@ -118,6 +118,7 @@ soft_label = create_softmax_softlabel(image_names, data)
     
 # GradCam
 robot_names = ['man', 'woman', 'cyborg_man', 'cyborg_woman', 'cyborg', 'robot_with_al_1', 'robot_with_al_2', 'robot_without_al_1', 'robot_without_al_2', 'thing']
+robot_display_names = ['man', 'woman', 'cyborg_man', 'cyborg_woman', 'cyborg', 'w_1', 'w_2', 'wo_1', 'wo_2', 'sphere']
 # 上のコードではtrain_test_split内でconvert('RGB')が行われていたので、この場合は自分で行う必要がある
 test_image = list(map(lambda x: Image.open('./robot_image/old/' + x + '.png').convert('RGB'), robot_names))
 test_data = list(map(transform['test'], test_image))
@@ -135,12 +136,19 @@ with torch.no_grad():
         ax.imshow(test_image[i])
         ax2 = fig.add_subplot(5, 6, 3*i+2)
         ax2.bar([0, 1, 2, 3, 4], y_pred_prob[i])
+        ax2.set_xticks([0, 1, 2, 3, 4]) 
+        ax2.set_xticklabels(['original', '1.15', '1.25', '1.35', '2'])
         ax2.set_ylim(0, 1)
         ax3 = fig.add_subplot(5, 6, 3*i+3)
         ax3.bar([0, 1, 2, 3, 4], soft_label[robot_names[i] + '.png'])
+        ax3.set_xticks([0, 1, 2, 3, 4]) 
+        ax3.set_xticklabels(['original', '1.15', '1.25', '1.35', '2'])
         ax3.set_ylim(0, 1)
         if i == 0 or i == 1:
             ax.set_title("Image", fontsize=18)
+            ax.text(0.35, -0.1, robot_display_names[i], fontsize=15, transform=ax.transAxes)
             ax2.set_title("Model output", fontsize=18)
             ax3.set_title("Target label", fontsize=18)
+        else:
+            ax.set_title(robot_display_names[i], fontsize=15, y=-0.15)
 plt.savefig('./figure/SP_inference.png')
